@@ -131,7 +131,7 @@ set(SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/hiir/Upsampler2xSse.hpp
     ${CMAKE_CURRENT_LIST_DIR}/hiir/Upsampler2xSseOld.h
     ${CMAKE_CURRENT_LIST_DIR}/hiir/Upsampler2xSseOld.hpp
-    ${CMAKE_CURRENT_LIST_DIR}/hiir/wrapper.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/wrapper.cpp
 )
 
 add_library(${TARGET} SHARED ${SOURCES})

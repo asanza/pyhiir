@@ -1,4 +1,4 @@
-#include "PolyphaseIir2Designer.h"
+#include "hiir/PolyphaseIir2Designer.h"
 
 using namespace hiir;
 
