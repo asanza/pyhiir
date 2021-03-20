@@ -1,0 +1,17 @@
+language: python
+jobs:
+  include:
+  - services: docker
+install:
+- python3 -m pip install cibuildwheel==1.11.0
+script:
+- python3 -m cibuildwheel --output-dir wheelhouse
+- ls wheelhouse/
+deploy:
+  provider: pypi
+  usename: __token__
+  skip_cleanup: true
+  password:
+    secure: HFD/oIRQ1w/DbiWN6eujLPq2i+NlNrWRrl8ZM61pjftEtamz0Zqk7r8/AqRH0lJaNym6iKZ3blvKi9f+SpnCGVec1/iyoTRosx+CsqcBmkTt9HwlbdNOFkRccJSdR+dk1FvdscwaX6wYursanOO9m1T3jb6GD7ySgyBjLpX1UVA5m2ZajpakgwXeaCnuFwp66gHxy/QPC9hdtU0d78TsJxj66yOrUYLXWV9klgi9ZNKMt8wUX2rxsGA/mZI+ubcj+zmIkkTYch3Gl6PVQBqHaXqV5V4lmV6x18XWiBEtSVbWUvnHrAVqDvMQ+SaAQCy68uyXx74aIcTsjzyU3FS5lcjJtrY92OOnW4qdqstn7cry5B6Ea//9LF0qTA77R/VnZvC/En4wGOMU7E677WF/PAD5AlHXrHrmJB+LJIyBSq5OgXaQgfy+2ecwrzDbBYHZZT8a00vcJsJGG18GWxPdayeUoa3pRVcKlKh5kviR8JeKEhYxrB6Lw7gP4sglmX5peIj1f6147ACtbL77gjmtEOtgY6CHAX3BnW0EfC0qPlte5yd6mpV4ShlwH7mARhsRQChwQUKPd1Fyz+a/aNBYqgjDavvJMqspOi4vI5VvTPAecUaBblj93IcsBB7hh8DXXf1H/aEBEWL0+Ly4NBJYLl0DYjsIPEddqsr6FpAVoX8=
+  on:
+    branch: main

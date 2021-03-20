@@ -1,0 +1,3 @@
+[submodule "hiir/hiir"]
+	path = hiir/hiir
+	url = https://github.com/unevens/hiir.git
