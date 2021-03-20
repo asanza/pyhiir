@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import ctypes as ct
 import numpy as np
 import os
