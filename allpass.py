@@ -1,4 +1,4 @@
-from numpy import zeros, polymul, polyadd
+from numpy import polysub, zeros, polymul, polyadd
 import numpy as np
 from scipy.signal import lfilter
 from numpy_ringbuffer import RingBuffer
@@ -8,6 +8,13 @@ def FilterAdd(f1, f2):
     n1 = polymul(f1.get_num(), f2.get_den())
     n2 = polymul(f1.get_den(), f2.get_num())
     num = polyadd(n1, n2)
+    return Filter(num, den)
+
+def FilterSub(f1, f2):
+    den = polymul(f1.get_den(), f2.get_den())
+    n1 = polymul(f1.get_num(), f2.get_den())
+    n2 = polymul(f1.get_den(), f2.get_num())
+    num = polysub(n1, n2)
     return Filter(num, den)
 
 def FilterMult(f1, f2):
@@ -106,6 +113,35 @@ class LowPass:
     by_tf = FilterMult(dl, by_tf)
 
     out = FilterAdd(bi_tf, by_tf)
+    out = Filter(out.get_num(), 2 * out.get_den())
+
+    return out
+
+  def get_num(self):
+    return self.get_transfer_function().get_num()
+
+  def get_den(self):
+    return self.get_transfer_function().get_den()
+
+class HighPass:
+  def __init__(self, coef):
+    bi = []
+    by = []
+    for i in range(0, len(coef), 2):
+      bi.append(AllPass(2, coef[i]))
+    for i in range(1, len(coef), 2):
+      by.append(AllPass(2, coef[i]))
+    self.bi = AllPassChain(bi)
+    self.by = AllPassChain(by)
+
+  def get_transfer_function(self):
+    bi_tf = self.bi.get_transfer_function()
+    by_tf = self.by.get_transfer_function()
+    dl = Delay(self.bi.order()).get_transfer_function()
+
+    by_tf = FilterMult(dl, by_tf)
+
+    out = FilterSub(bi_tf, by_tf)
     out = Filter(out.get_num(), 2 * out.get_den())
 
     return out

@@ -3,7 +3,7 @@
 import ctypes as ct
 import numpy as np
 import os
-from allpass import AllPass, AllPassChain, LowPass
+from allpass import AllPass, AllPassChain, LowPass, HighPass
 from scipy import signal
 import matplotlib.pyplot as plt
 
@@ -42,29 +42,13 @@ class hiir:
 if __name__=='__main__':
     h = hiir()
     #print(h.compute_nbr_coefs_from_proto(40, 0.1))
-    x = h.compute_coefs_order_tbw(10, 0.1)
+    x = h.compute_coefs_order_tbw(2, 0.1)
     f = LowPass(x)
-    # print(x)    
-    # #print(h.compute_coefs(40, 0.1))
-    # ai = AllPass(2, x[0])
-    # ay = AllPass(2, x[1])
-    # ai1 = AllPass(2, x[2])
-    # ay1 = AllPass(2, x[3])
-    # ai2 = AllPass(2, x[4])
-    # ay2 = AllPass(2, x[5])
-    # ai3 = AllPass(2, x[6])
-    # ay3 = AllPass(2, x[7])
-    # ai4 = AllPass(2, x[8])
-    # ay4 = AllPass(2, x[9])
-
-    # bi = AllPassChain([ai, ai1, ai2, ai3, ai4])
-    # by = AllPassChain([ay, ay1, ay2, ay3, ay4])
-
-    # f = LowPass(bi, by)
 
     tf = f.get_transfer_function()
 
     w, h = signal.freqz(tf.b, tf.a)
+
 
     plt.plot(w / np.pi, 20 * np.log10(abs(h)), 'b')
     plt.show()
