@@ -3,11 +3,12 @@
 import ctypes as ct
 import numpy as np
 import os
-from allpass import AllPass, AllPassChain, LowPass, HighPass
-from scipy import signal
-import matplotlib.pyplot as plt
+from pyhiir.allpass import AllPass, AllPassChain, LowPass, HighPass
 
-path = 'build/hiir/libhiir.so'
+if os.name == 'nt':
+    pat = 'libhiir.dll'
+else:
+    path = 'libhiir.so'
 
 class hiir:
     def __init__(self):
@@ -40,15 +41,4 @@ class hiir:
         return x
 
 if __name__=='__main__':
-    h = hiir()
-    #print(h.compute_nbr_coefs_from_proto(40, 0.1))
-    x = h.compute_coefs_order_tbw(2, 0.1)
-    f = LowPass(x)
-
-    tf = f.get_transfer_function()
-
-    w, h = signal.freqz(tf.b, tf.a)
-
-
-    plt.plot(w / np.pi, 20 * np.log10(abs(h)), 'b')
-    plt.show()
+    pass
