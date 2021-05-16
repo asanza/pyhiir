@@ -66,6 +66,10 @@ class CMakeBuild(build_ext):
                               cwd=self.build_temp)
         print()  # Add an empty line for cleaner output
 
+class git_clone_external(build_ext):
+    def run(self):
+        subprocess.check_call(['git', 'clone', 'https://git.example.com'])
+        build_ext.run(self)
 
 setup(
     name='pyhiir',
