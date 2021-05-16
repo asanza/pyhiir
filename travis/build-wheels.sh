@@ -13,7 +13,7 @@ function repair_wheel {
 
 # Install a system package required by our library
 apt-get update
-apt-get install -y cmake atlas-devel blas-devel lapack-devel
+apt-get install -y cmake libatlas-dev libblas-dev libblapack-dev
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
