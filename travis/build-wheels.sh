@@ -12,7 +12,7 @@ function repair_wheel {
 
 
 # Install a system package required by our library
-yum install -y cmake atlas-devel
+yum install -y cmake atlas-devel blas-devel lapack-devel
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
