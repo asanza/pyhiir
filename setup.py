@@ -89,7 +89,7 @@ setup(
     # add custom build_ext command
     cmdclass=dict(build_ext=CMakeBuild),
     install_requires = [
-        'numpy >= 1.20.3',
+        'numpy >= 1.19.2',
         'scipy >= 1.6.1',
         'numpy_ringbuffer >= 0.2.1',
     ],
