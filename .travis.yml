@@ -1,33 +1,14 @@
 language: python
-
 jobs:
   include:
-    # perform a linux build
-    - services: docker
-    # perform a linux ARMv8 build
-    # - services: docker
-    #   arch: arm64
-    # # perform a linux PPC64LE build
-    # - services: docker
-    #   arch: ppc64le
-    # # perform a linux S390X build
-    # - services: docker
-    #   arch: s390x
-    # # and a mac build
-    # - os: osx
-    #   language: shell
-    # # and a windows build
-    # - os: windows
-    #   language: shell
-    #   before_install:
-    #     - choco upgrade python -y --version 3.8.6
-    #     - export PATH="/c/Python38:/c/Python38/Scripts:$PATH"
-    #     # make sure it's on PATH as 'python3'
-    #     - ln -s /c/Python38/python.exe /c/Python38/python3.exe
-
+  - services: docker
 install:
-  - python3 -m pip install cibuildwheel==1.11.0
-
+- python3 -m pip install cibuildwheel==1.11.0
 script:
-  - python3 -m cibuildwheel --output-dir wheelhouse
-  - ls wheelhouse/
+- python3 -m cibuildwheel --output-dir wheelhouse
+- ls wheelhouse/
+deploy:
+  provider: pypi
+  usename: __token__
+  password:
+    secure: HFD/oIRQ1w/DbiWN6eujLPq2i+NlNrWRrl8ZM61pjftEtamz0Zqk7r8/AqRH0lJaNym6iKZ3blvKi9f+SpnCGVec1/iyoTRosx+CsqcBmkTt9HwlbdNOFkRccJSdR+dk1FvdscwaX6wYursanOO9m1T3jb6GD7ySgyBjLpX1UVA5m2ZajpakgwXeaCnuFwp66gHxy/QPC9hdtU0d78TsJxj66yOrUYLXWV9klgi9ZNKMt8wUX2rxsGA/mZI+ubcj+zmIkkTYch3Gl6PVQBqHaXqV5V4lmV6x18XWiBEtSVbWUvnHrAVqDvMQ+SaAQCy68uyXx74aIcTsjzyU3FS5lcjJtrY92OOnW4qdqstn7cry5B6Ea//9LF0qTA77R/VnZvC/En4wGOMU7E677WF/PAD5AlHXrHrmJB+LJIyBSq5OgXaQgfy+2ecwrzDbBYHZZT8a00vcJsJGG18GWxPdayeUoa3pRVcKlKh5kviR8JeKEhYxrB6Lw7gP4sglmX5peIj1f6147ACtbL77gjmtEOtgY6CHAX3BnW0EfC0qPlte5yd6mpV4ShlwH7mARhsRQChwQUKPd1Fyz+a/aNBYqgjDavvJMqspOi4vI5VvTPAecUaBblj93IcsBB7hh8DXXf1H/aEBEWL0+Ly4NBJYLl0DYjsIPEddqsr6FpAVoX8=
