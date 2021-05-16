@@ -90,8 +90,7 @@ setup(
     cmdclass=dict(build_ext=CMakeBuild),
     install_requires = [
         'numpy >= 1.19.2',
-        'scipy >= 1.6.1',
-        'numpy_ringbuffer >= 0.2.1',
+        'scipy >= 1.6.0',
     ],
     zip_safe=False,
 )

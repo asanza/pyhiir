@@ -1,7 +1,6 @@
 from numpy import polysub, zeros, polymul, polyadd
 import numpy as np
 from scipy.signal import lfilter
-from numpy_ringbuffer import RingBuffer
 
 def FilterAdd(f1, f2):
     den = polymul(f1.get_den(), f2.get_den())

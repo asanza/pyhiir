@@ -3,7 +3,6 @@
 import ctypes as ct
 import numpy as np
 import os
-from pyhiir.allpass import AllPass, AllPassChain, LowPass, HighPass
 
 if os.name == 'nt':
     pat = 'libhiir.dll'
