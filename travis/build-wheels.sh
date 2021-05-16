@@ -17,7 +17,7 @@ apt-get install -y cmake libatlas-dev libblas-dev liblapack-dev gfortran libgmp-
 
 # Compile wheels
 for PYBIN in /opt/python/*/bin; do
-    "${PYBIN}/pip" install --upgrade pip
+    "${PYBIN}/pip" install --upgrade pip setuptools wheel
     "${PYBIN}/pip" install -r /io/dev-requirements.txt
     "${PYBIN}/pip" wheel /io/ --no-deps -w wheelhouse/
 done
