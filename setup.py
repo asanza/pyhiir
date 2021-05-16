@@ -73,7 +73,7 @@ class git_clone_external(build_ext):
 
 setup(
     name='pyhiir',
-    version='0.0.1',
+    version='0.0.2',
     author='Diego Asanza',
     author_email='diego.asanza@gmail.com',
     description='Python wrapper for HIIR library',
