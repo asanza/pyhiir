@@ -12,6 +12,7 @@ function repair_wheel {
 
 
 # Install a system package required by our library
+apt-get update
 apt-get install -y cmake atlas-devel blas-devel lapack-devel
 
 # Compile wheels
