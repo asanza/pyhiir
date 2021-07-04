@@ -15,7 +15,7 @@ jobs:
         with:
           submodules: recursive
 
-          # Used to host cibuildwheel
+      # Used to host cibuildwheel
       - uses: actions/setup-python@v2
 
       - name: Install cibuildwheel
