@@ -5,7 +5,7 @@ import numpy as np
 import os
 
 if os.name == 'nt':
-    pat = 'libhiir.dll'
+    path = 'libhiir.dll'
 else:
     path = 'libhiir.so'
 
