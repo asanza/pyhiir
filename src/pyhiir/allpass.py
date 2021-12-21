@@ -87,11 +87,9 @@ class Delay:
     self.order = order
 
   def get_transfer_function(self):
-    b = np.zeros(self.order + 1)
-    a = np.zeros(self.order + 1)
-    b[len(b) - 1] = 1
-    a[0] = 1
-    return Filter(b, a)
+    den = zeros(np.int(self.order / 2) + 1)
+    den[0] = 1
+    return Filter(1, den)
 
   def get_den(self):
     return self.get_transfer_function().get_den()
