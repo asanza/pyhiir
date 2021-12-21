@@ -70,13 +70,17 @@ class git_clone_external(build_ext):
         subprocess.check_call(['git', 'clone', 'https://git.example.com'])
         build_ext.run(self)
 
+with open('README.md', 'r', encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name='pyhiir',
     version='0.0.4',
     author='Diego Asanza',
     author_email='diego.asanza@gmail.com',
     description='Python wrapper for HIIR library',
-    long_description='',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     # tell setuptools to look for any packages under 'src'
     packages=find_packages('src'),
     # tell setuptools that all packages will be under the 'src' directory
