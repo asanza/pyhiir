@@ -35,15 +35,9 @@ class Filter:
     return lfilter(self.b, self.a, x)
 
 class AllPass:
-  def __init__(self, order, b):
-    self.b = zeros(order + 1)
-    self.a = zeros(order + 1)
-
-    self.b[0] = b
-    self.b[order] = 1
-
-    self.a[0] = 1
-    self.a[order] = b
+  def __init__(self, b, a):
+    self.b = b
+    self.a = a
 
   def apply(self, x):
     return lfilter(self.b, self.a, x)
@@ -103,10 +97,10 @@ class LowPass:
   def __init__(self, coef):
     bi = []
     by = []
-    for i in range(0, len(coef), 2):
-      bi.append(AllPass(2, coef[i]))
-    for i in range(1, len(coef), 2):
-      by.append(AllPass(2, coef[i]))
+    for i in coef[0::2]:
+      bi.append(AllPass([i, 0, 1], [1, 0, i]))
+    for i in coef[1::2]:
+      by.append(AllPass([i, 0, 1], [1, 0, i]))
     self.bi = AllPassChain(bi)
     self.by = AllPassChain(by)
 
@@ -132,10 +126,10 @@ class HighPass:
   def __init__(self, coef):
     bi = []
     by = []
-    for i in range(0, len(coef), 2):
-      bi.append(AllPass(2, coef[i]))
-    for i in range(1, len(coef), 2):
-      by.append(AllPass(2, coef[i]))
+    for i in coef[0::2]:
+      bi.append(AllPass([i, 0, 1], [1, 0, i]))
+    for i in coef[1::2]:
+      by.append(AllPass([i, 0, 1], [1, 0, i]))
     self.bi = AllPassChain(bi)
     self.by = AllPassChain(by)
 
@@ -156,3 +150,25 @@ class HighPass:
 
   def get_den(self):
     return self.get_transfer_function().get_den()
+
+class Hilbert:
+  def __init__(self, coef):
+    bi = []
+    by = []
+    for i in coef[0::2]:
+      bi.append(AllPass([i, 0, -1], [1, 0, -i]))
+    for i in coef[1::2]:
+      by.append(AllPass([i, 0, -1], [1, 0, -i]))
+    self.bi = AllPassChain(bi)
+    self.by = AllPassChain(by)
+
+  def get_transfer_function(self):
+    bx_tf = self.bi.get_transfer_function()
+    by_tf = self.by.get_transfer_function()
+    dl = Delay(1).get_transfer_function()
+    by_tf = FilterMult(dl, by_tf)
+    f = Filter([1],[np.sqrt(2)]) # 0.5
+    bx = FilterMult(f, FilterAdd(by_tf, bx_tf))
+    f = Filter([1],[np.sqrt(2)]) # 0.5
+    by = FilterMult(f, FilterSub(by_tf, bx_tf))
+    return bx, by

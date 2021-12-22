@@ -2,7 +2,7 @@
 
 from numpy.core.numeric import cross
 from src.pyhiir.hiir import hiir
-from src.pyhiir.allpass import LowPass
+from src.pyhiir.allpass import Hilbert, LowPass
 from scipy import signal
 import matplotlib.pyplot as plt
 import numpy as np
@@ -105,13 +105,29 @@ if __name__=='__main__':
         y = y[1::2]
         fsf = fsf / 2
 
-    # yy = freq_from_crossings(y, fsf)
-    # hf = freq_from_hilbert(y, fsf )
+    f = hiir()
+    fg = 50.001
+    fs = 500
+    c = f.compute_coefs_order_tbw(4, .1)
 
-    # plt.plot(t, x)
-    # plt.plot(np.arange(0, tf, tf/len(y))[0:], y, '.')
-    # plt.plot(np.arange(0, tf, tf/len(yy))[0:], yy/100, '.')
-    # plt.plot(np.arange(0, tf, tf/len(hf))[0:], hf/100, '.')
-    # plt.plot(t, fg * 0.01 * np.ones(len(t)))
+    h = Hilbert(c)
+    #k = LowPass(c).get_transfer_function()
+
+    fi, fq = h.get_transfer_function()
+    wi, hi = signal.freqz(fi.b, fi.a, 50000, fs=fs)
+    wq, hq = signal.freqz(fq.b, fq.a, 50000, fs=fs)
+    # Plot the frequency response
+    plt.plot(wi, (np.angle(hi)), color='r')
+    plt.plot(wq, (np.angle(hq)), color='g')
+    #plt.plot(wi, (np.angle(hi) - np.angle(hq)), color='y')
+    plt.ylabel('Phase [rad]', color='r')
+    plt.tick_params('y', colors='r')
+    plt.show()
+    
+    plt.plot(wi, np.abs(hi), color='r')
+    plt.plot(wq, np.abs(hq), color='g')
+    plt.show()
+
+
     plt.show()
 

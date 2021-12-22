@@ -75,12 +75,13 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='pyhiir',
-    version='0.0.6',
+    version='0.0.7',
     author='Diego Asanza',
     author_email='diego.asanza@gmail.com',
     description='Python wrapper for HIIR library',
     long_description=long_description,
     long_description_content_type='text/markdown',
+    url='https://github.com/asanza/pyhiir',
     # tell setuptools to look for any packages under 'src'
     packages=find_packages('src'),
     # tell setuptools that all packages will be under the 'src' directory
