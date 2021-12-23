@@ -172,3 +172,12 @@ class Hilbert:
     f = Filter([1],[np.sqrt(2)]) # 0.5
     by = FilterMult(f, FilterSub(by_tf, bx_tf))
     return bx, by
+
+    def apply(self, x):
+        hx = lfilter(hi.b, hi.a, x)
+        hy = lfilter(hq.b, hq.a, x)
+        l = []
+        for i, j in zip(hx, hy):
+            l.append(i + 1j*j)
+        return np.array(l)
+        
