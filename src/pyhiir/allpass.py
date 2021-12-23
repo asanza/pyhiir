@@ -183,6 +183,7 @@ class Hilbert:
         return bx, by
 
     def apply(self, x):
+        hi, hq = self.get_transfer_function()
         hx = lfilter(hi.b, hi.a, x)
         hy = lfilter(hq.b, hq.a, x)
         l = []
