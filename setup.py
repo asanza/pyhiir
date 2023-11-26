@@ -28,8 +28,15 @@ class CMakeBuild(build_ext):
         if platform.system() == "Windows":
             cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)',
                                          out.decode()).group(1))
-            if cmake_version < '3.1.0':
-                raise RuntimeError("CMake >= 3.1.0 is required on Windows")
+            if cmake_version < '3.20.0':
+                raise RuntimeError("CMake >= 3.20.0 is required on Windows")
+
+        try:
+            out = subprocess.check_output(['ninja', '--version'])
+        except OSError:
+            raise RuntimeError(
+                "Ninja must be installed to build the following extensions: " +
+                ", ".join(e.name for e in self.extensions))
 
         for ext in self.extensions:
             self.build_extension(ext)
@@ -37,7 +44,7 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = os.path.abspath(
             os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir, ]#'-DPYTHON_EXECUTABLE=' + sys.executable]
+        cmake_args = ['-GNinja', '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir, ]#'-DPYTHON_EXECUTABLE=' + sys.executable]
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -46,12 +53,8 @@ class CMakeBuild(build_ext):
             cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
                 cfg.upper(),
                 extdir)]
-            if sys.maxsize > 2**32:
-                cmake_args += ['-A', 'x64']
-            build_args += ['--', '/m']
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
-            build_args += ['--', '-j2']
 
         env = os.environ.copy()
         env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(
