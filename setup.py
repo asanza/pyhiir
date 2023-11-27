@@ -71,7 +71,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='pyhiir',
-    version='0.0.9',
+    version='0.0.13',
     author='Diego Asanza',
     author_email='diego.asanza@gmail.com',
     description='Python wrapper for HIIR library',
