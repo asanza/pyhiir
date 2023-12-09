@@ -31,20 +31,13 @@ class CMakeBuild(build_ext):
             if cmake_version < '3.20.0':
                 raise RuntimeError("CMake >= 3.20.0 is required on Windows")
 
-        try:
-            out = subprocess.check_output(['ninja', '--version'])
-        except OSError:
-            raise RuntimeError(
-                "Ninja must be installed to build the following extensions: " +
-                ", ".join(e.name for e in self.extensions))
-
         for ext in self.extensions:
             self.build_extension(ext)
 
     def build_extension(self, ext):
         extdir = os.path.abspath(
             os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-GNinja', '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir, ]#'-DPYTHON_EXECUTABLE=' + sys.executable]
+        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir, ]#'-DPYTHON_EXECUTABLE=' + sys.executable]
 
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
@@ -78,7 +71,7 @@ with open('README.md', 'r', encoding='utf-8') as f:
 
 setup(
     name='pyhiir',
-    version='0.0.9',
+    version='0.0.13',
     author='Diego Asanza',
     author_email='diego.asanza@gmail.com',
     description='Python wrapper for HIIR library',
