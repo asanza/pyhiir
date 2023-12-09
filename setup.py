@@ -69,9 +69,17 @@ class git_clone_external(build_ext):
 with open('README.md', 'r', encoding='utf-8') as f:
     long_description = f.read()
 
+def get_git_version():
+    try:
+        version = subprocess.check_output(['git', 'describe', '--tags', '--always'])
+        version = version.decode('utf-8').strip().strip('v')
+    except:
+        raise RuntimeError("Unable to get version number from git tags")
+    return version
+
 setup(
     name='pyhiir',
-    version='0.0.13',
+    version=get_git_version(),
     author='Diego Asanza',
     author_email='diego.asanza@gmail.com',
     description='Python wrapper for HIIR library',
