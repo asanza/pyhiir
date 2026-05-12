@@ -54,8 +54,8 @@ class AllPass:
 
 
 class AllPassChain:
-    def __init__(self, filter_list=[]):
-        self.filters = filter_list
+    def __init__(self, filter_list=None):
+        self.filters = filter_list if filter_list is not None else []
 
     def order(self):
         return self.filters[0].order()

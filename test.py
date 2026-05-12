@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from numpy.core.numeric import cross
 from src.pyhiir.hiir import hiir
 from src.pyhiir.allpass import Hilbert, LowPass
 from scipy import signal
@@ -88,7 +87,7 @@ if __name__=='__main__':
 
     # appling first decimator
     h = hiir()
-    c = h.compute_coefs_order_tbw(4, .1)
+    c = h.compute_coefs_order_tbw(2, .05)
     f = LowPass(c)
     ff = f.get_transfer_function()
 

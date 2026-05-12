@@ -5,7 +5,6 @@ import sysconfig
 import platform
 import subprocess
 
-from distutils.version import LooseVersion
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
 
@@ -26,9 +25,8 @@ class CMakeBuild(build_ext):
                 ", ".join(e.name for e in self.extensions))
 
         if platform.system() == "Windows":
-            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)',
-                                         out.decode()).group(1))
-            if cmake_version < '3.20.0':
+            cmake_version = tuple(int(x) for x in re.search(r'version\s*([\d.]+)', out.decode()).group(1).split('.'))
+            if cmake_version < (3, 20, 0):
                 raise RuntimeError("CMake >= 3.20.0 is required on Windows")
 
         for ext in self.extensions:
@@ -37,15 +35,19 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = os.path.abspath(
             os.path.dirname(self.get_ext_fullpath(ext.name)))
-        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir, ]#'-DPYTHON_EXECUTABLE=' + sys.executable]
-
         cfg = 'Debug' if self.debug else 'Release'
         build_args = ['--config', cfg]
 
+        cmake_args = [
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+            '-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir),
+        ]
+
         if platform.system() == "Windows":
-            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(
-                cfg.upper(),
-                extdir)]
+            cmake_args += [
+                '-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=' + extdir,
+                '-DCMAKE_RUNTIME_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir),
+            ]
         else:
             cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
 
@@ -101,5 +103,4 @@ setup(
         'scipy >= 1.6.3',
     ],
     zip_safe=False,
-    test_suite='tests',
 )
