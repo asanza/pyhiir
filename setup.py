@@ -71,17 +71,24 @@ class git_clone_external(build_ext):
 with open('README.md', 'r', encoding='utf-8') as f:
     long_description = f.read()
 
-def get_git_version():
+def get_version():
+    # When building from an sdist (e.g. pip install from PyPI), PKG-INFO is present
+    here = os.path.dirname(os.path.abspath(__file__))
+    pkg_info = os.path.join(here, 'PKG-INFO')
+    if os.path.exists(pkg_info):
+        with open(pkg_info, 'r', encoding='utf-8') as f:
+            for line in f:
+                if line.startswith('Version:'):
+                    return line.split(':', 1)[1].strip()
     try:
         version = subprocess.check_output(['git', 'describe', '--tags', '--always'])
-        version = version.decode('utf-8').strip().strip('v')
-    except:
-        raise RuntimeError("Unable to get version number from git tags")
-    return version
+        return version.decode('utf-8').strip().strip('v')
+    except Exception:
+        raise RuntimeError("Unable to get version from git tags or PKG-INFO")
 
 setup(
     name='pyhiir',
-    version=get_git_version(),
+    version=get_version(),
     author='Diego Asanza',
     author_email='diego.asanza@gmail.com',
     description='Python wrapper for HIIR library',
