@@ -828,11 +828,11 @@ class MainWindow(QMainWindow):
         self.scalar_panel = ScalarFiltersPanel()
         self.chain_panel  = ChainPanel()
         self.left_tabs.addTab(self.single_panel, "Half-Band")
-        self.left_tabs.addTab(self.scalar_panel, "1st-Order")
+        # self.left_tabs.addTab(self.scalar_panel, "1st-Order")  # WIP — hidden
         self.left_tabs.addTab(self.chain_panel,  "Decimator Chain")
 
         self.single_panel.designed.connect(self._on_single)
-        self.scalar_panel.designed.connect(self._on_scalar)
+        # self.scalar_panel.designed.connect(self._on_scalar)   # WIP — hidden
         self.chain_panel.designed.connect(self._on_chain)
 
         # ── right area ────────────────────────────────────────────────────
