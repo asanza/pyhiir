@@ -673,74 +673,48 @@ class Hilbert:
 
 class QuarterBandBS:
     """
-    Quarter-band band-stop filter (polyphase, single-rate).
+    Wide band-stop filter using the halfband-of-halfband z→z² symmetry.
 
-    H_BS(z) = 1 - H_LP(z) * H_HP(z²)
+    H_BS(z) = H_LP(z²)
 
-    where:
-        H_LP(z)   — half-band LP at fs/4  (same coefficients as half-band LP)
-        H_HP(z²)  — HP applied at half-rate via z→z² substitution,
-                     giving effective cutoff at fs/8 of the full-rate signal
+    The z→z² substitution makes H_LP periodic with half its original period,
+    creating a naturally symmetric response around fs/4:
 
-    This blocks [≈fs/8, ≈fs/4] and passes [0, fs/8] and [fs/4, fs/2].
+        |H_BS(f)| = |H_LP(2f)|
+
+        Pass:  [0, ≈fs/8]    and  [≈3fs/8, fs/2]  (Q1 and Q4)
+        Stop:  [≈fs/8, ≈3fs/8]                      (Q2 and Q3)
+        Null:  exactly fs/4  (always −∞ dB)
+        -3 dB: exactly fs/8  and  3fs/8  (halfband identity)
+
+    Order controls the transition steepness and stopband depth.
+    The -3 dB frequencies (fs/8 and 3fs/8) are fixed by the structure.
 
     Args:
-        coefs: Allpass coefficients for both stages (half-band design at fs/4).
+        coefs: Allpass coefficients from a standard halfband LP design.
     """
 
     def __init__(self, coefs):
         coefs = np.asarray(coefs, dtype=float)
         self.coefs          = coefs
-        self.coefs_lp       = coefs
-        self.coefs_hp       = coefs
         self.branch_x_coefs = coefs[0::2]
         self.branch_y_coefs = coefs[1::2]
         self._lp = LowPass(coefs)
-        self._hp = HighPass(coefs)
 
     @staticmethod
     def _upsample(arr):
-        """Insert a zero between every coefficient: z -> z²."""
+        """Insert a zero between every coefficient: z → z²."""
         arr = np.asarray(arr, dtype=float)
         out = np.zeros(2 * len(arr) - 1)
         out[::2] = arr
         return out
 
     def get_transfer_function(self):
-        """H_BS = H_LP(z) * H_LP(z²) + H_HP(z).
-
-        H_LP(z)   passes [0, fs/4].
-        H_LP(z²)  embedded at half-rate → passes [0, fs/8] of full-rate signal.
-        Cascade LP*LP(z²) passes only [0, fs/8].
-        H_HP(z)   passes [fs/4, fs/2].
-        Sum passes [0, fs/8] ∪ [fs/4, fs/2] → band-stop at [fs/8, fs/4].
-        """
-        tf_lp = self._lp.get_transfer_function()
-        tf_hp = self._hp.get_transfer_function()
-
-        b_lp = np.asarray(tf_lp.b, dtype=float)
-        a_lp = np.asarray(tf_lp.a, dtype=float)
-        b_hp = np.asarray(tf_hp.b, dtype=float)
-        a_hp = np.asarray(tf_hp.a, dtype=float)
-
-        # H_LP(z²): insert a zero between every coefficient
-        b_lp2 = self._upsample(b_lp)
-        a_lp2 = self._upsample(a_lp)
-
-        # Cascade: H_LP(z) * H_LP(z²)
-        b_lplp = np.convolve(b_lp, b_lp2)
-        a_lplp = np.convolve(a_lp, a_lp2)
-
-        # FilterAdd: H_LP*H_LP(z²) + H_HP
-        # Common denominator = a_lplp * a_hp
-        a_out = np.convolve(a_lplp, a_hp)
-        t1    = np.convolve(b_lplp, a_hp)
-        t2    = np.convolve(b_hp,   a_lplp)
-        b_out = np.zeros(len(a_out))
-        b_out[:len(t1)] += t1
-        b_out[:len(t2)] += t2
-
-        return Filter(list(b_out), list(a_out))
+        """H_BS(z) = H_LP(z²)  — symmetric wide stop at [fs/8, 3fs/8]."""
+        tf = self._lp.get_transfer_function()
+        b2 = self._upsample(tf.b)
+        a2 = self._upsample(tf.a)
+        return Filter(list(b2), list(a2))
 
     def apply(self, x):
         tf = self.get_transfer_function()
@@ -749,9 +723,10 @@ class QuarterBandBS:
     def info(self, fs=None):
         tf = self.get_transfer_function()
         print(f"\n{'='*58}")
-        print(f"  QuarterBandBS  order={len(self.coefs)}")
+        print(f"  QuarterBandBS  H_LP(z\u00b2)  order={len(self.coefs)}")
         if fs:
-            print(f"  fs={fs:.1f} Hz   stopband \u2248[{fs/8:.1f}\u2013{fs/4:.1f}] Hz")
+            print(f"  fs={fs:.1f} Hz   stopband \u2248[{fs/8:.1f}\u2013{3*fs/8:.1f}] Hz"
+                  f"  (passes Q1+Q4)")
         print(f"{'='*58}")
         print(f"  coefs = {self.coefs}")
         b = np.asarray(tf.b); a = np.asarray(tf.a)

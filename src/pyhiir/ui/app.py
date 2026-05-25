@@ -685,20 +685,22 @@ class CoefPanel(QWidget):
         is_hilbert     = isinstance(filt, Hilbert)
 
         if is_qbs:
-            # ── Quarter-band polyphase BS ─────────────────────────────
-            lines  = [f"QuarterBandBS  polyphase   fs={fs:.1f} Hz", "",
-                      f"Stopband \u2248 [{fs/8:.1f}\u2013{fs/4:.1f}] Hz",
-                      f"Passband: [0\u2013{fs/8:.1f}] \u222a [{fs/4:.1f}\u2013{fs/2:.1f}] Hz",
+            # ── QuarterBandBS  H_LP(z²) ──────────────────────────────
+            lines  = [f"QuarterBandBS   H_LP(z\u00b2)   fs={fs:.1f} Hz", "",
+                      f"Stopband  \u2248 [{fs/8:.1f}\u2013{3*fs/8:.1f}] Hz  (Q2 + Q3)",
+                      f"Passband: [0\u2013{fs/8:.1f}] \u222a [{3*fs/8:.1f}\u2013{fs/2:.1f}] Hz  (Q1 + Q4)",
+                      f"Null:       exactly {fs/4:.1f} Hz  (\u2212\u221e dB)",
+                      f"-3 dB:      {fs/8:.1f} Hz  and  {3*fs/8:.1f} Hz  (halfband identity)",
                       "",
-                      "H_BS(z) = 1 \u2212 H_LP(z) \u00d7 H_HP(z\u00b2)", "",
-                      "LP stage (half-band at fs/4):"]
+                      "H_BS(z) = H_LP(z\u00b2)   \u2190 z\u2192z\u00b2 halves the LP cutoff,",
+                      "                       making the response symmetric around fs/4",
+                      ""]
+            lines += ["# Underlying LP stage (half-band at fs/4):"]
             lines += [_ascii_tf(filt._lp, fs=fs), ""]
-            lines += ["HP stage (embedded at half-rate via z\u2192z\u00b2):"]
-            lines += [_ascii_tf(filt._hp, fs=fs), ""]
             lines += ["# " + "\u2500" * 55]
             lines += [f"coefs = {self._arr(filt.coefs)}", ""]
             tf = filt.get_transfer_function()
-            lines += ["# Combined H_BS",
+            lines += ["# H_BS = H_LP(z\u00b2)  combined b/a:",
                       f"b = {self._arr(tf.b)}", f"a = {self._arr(tf.a)}"]
         elif is_bs1:
             # ── Band-stop ASCII TF ───────────────────────────────────
@@ -874,9 +876,9 @@ class MainWindow(QMainWindow):
         self.plot_panel.plot_single(filt, fs, show_branches=show_br)
         self.coef_panel.show_single(filt, fs)
         if isinstance(filt, QuarterBandBS):
-            msg = (f"QuarterBandBS  fs={fs:.0f} Hz  "
-                   f"stopband≈[{fs/8:.1f}–{fs/4:.1f}] Hz  "
-                   f"LP order={len(filt.coefs_lp)}  HP order={len(filt.coefs_hp)}")
+            msg = (f"QuarterBandBS  H_LP(z\u00b2)  fs={fs:.0f} Hz  "
+                   f"stopband\u2248[{fs/8:.1f}\u2013{3*fs/8:.1f}] Hz  "
+                   f"order={len(filt.coefs)}")
         else:
             msg = (f"{type(filt).__name__}  fs={fs:.0f} Hz  "
                    f"order={len(filt.coefs)}  "
