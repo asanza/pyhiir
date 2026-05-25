@@ -108,6 +108,13 @@ setup(
     install_requires = [
         'numpy >= 1.19.2',
         'scipy >= 1.6.3',
+        'matplotlib >= 3.5.0',
+        'PySide6 >= 6.0.0',
     ],
+    entry_points={
+        'console_scripts': [
+            'pyalfd = pyhiir.ui.app:main',
+        ],
+    },
     zip_safe=False,
 )
