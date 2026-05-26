@@ -506,6 +506,21 @@ class PlotPanel(QWidget):
         w, h = freqz(b, a, worN=n)
         return w * fs / (2 * np.pi), h
 
+    @staticmethod
+    def _mag_ylim(ax, top=5):
+        """Lower y-limit from plotted data, ignoring numerical noise at zeros."""
+        mins = []
+        for line in ax.get_lines():
+            yd = np.asarray(line.get_ydata(), dtype=float)
+            yd = yd[np.isfinite(yd) & (yd > -200)]
+            if len(yd):
+                mins.append(float(yd.min()))
+        if not mins:
+            return -80, top
+        floor = np.floor((min(mins) - 10) / 10) * 10   # round down, add margin
+        floor = float(np.clip(floor, -200, -20))
+        return floor, top
+
     def plot_single(self, filt, fs, show_branches=True):
         """Plot LowPass, HighPass, or Hilbert."""
         self.cv_mag.clear(); self.cv_ph.clear(); self.cv_gd.clear()
@@ -574,7 +589,7 @@ class PlotPanel(QWidget):
             if ax.get_legend_handles_labels()[1]:
                 ax.legend()
             ax.set_xlim(0, fs / 2)
-        ax_m.set_ylim(-80, 5)
+        ax_m.set_ylim(*self._mag_ylim(ax_m))
 
         for cv in (self.cv_mag, self.cv_ph, self.cv_gd):
             cv.fig.tight_layout(pad=1.8)
@@ -622,7 +637,7 @@ class PlotPanel(QWidget):
         ax_m.set_title(title, color=TEXT, pad=6)
         ax_m.set_xlabel("Frequency [Hz]", color=TEXT)
         ax_m.set_ylabel("Magnitude [dB]", color=TEXT)
-        ax_m.set_ylim(-80, 5)
+        ax_m.set_ylim(*self._mag_ylim(ax_m))
         ax_m.set_xlim(0, chain.fs / 2)
         if ax_m.get_legend_handles_labels()[1]:
             ax_m.legend(fontsize=9)
