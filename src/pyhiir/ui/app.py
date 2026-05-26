@@ -562,12 +562,9 @@ class PlotPanel(QWidget):
             ls = "-" if "Combined" in lbl or "branch" in lbl else "--"
             ax_m.plot(freqs, mag_db, color=col, lw=lw, ls=ls, label=lbl)
             ax_p.plot(freqs, np.degrees(np.unwrap(np.angle(h))), color=col, lw=lw, ls=ls, label=lbl)
-            try:
-                _, gd = sp_gd(f_obj.b, f_obj.a, worN=8192)
-                gd_f  = np.linspace(0, fs / 2, 8192)
-                ax_g.plot(gd_f, gd, color=col, lw=lw, ls=ls, label=lbl)
-            except Exception:
-                pass
+            _, gd = sp_gd((f_obj.b, f_obj.a), w=8192)
+            gd_f  = np.linspace(0, fs / 2, 8192)
+            ax_g.plot(gd_f, gd, color=col, lw=lw, ls=ls, label=lbl)
 
         title = f"{type(filt).__name__}   fs={fs:.0f} Hz"
         for ax, ylabel in [(ax_m, "Magnitude [dB]"), (ax_p, "Phase [°]"), (ax_g, "Group delay [samples]")]:
