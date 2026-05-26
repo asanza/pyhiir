@@ -184,23 +184,6 @@ class DecimatorChain:
         self.stages.append(StageSpec(len(self.stages), 'LP', fs, f_pass, coefs, filt))
         return self  # chainable
 
-    def add_hp(self, f_pass, order=None, attenuation_db=60.0, f_stop=None):
-        """
-        Append a half-band HP decimation stage.
-
-        Args:
-            f_pass:         Passband edge [Hz] at this stage's input fs.
-            order:          Number of allpass sections (None = auto).
-            attenuation_db: Stopband attenuation [dB]  (used when order=None).
-            f_stop:         Stopband edge [Hz]  (default: input_fs/2 - f_pass).
-        """
-        fs    = self._current_input_fs()
-        coefs = halfband(fs, f_pass, order=order,
-                         attenuation_db=attenuation_db, f_stop=f_stop)
-        filt  = HighPass(coefs)
-        self.stages.append(StageSpec(len(self.stages), 'HP', fs, f_pass, coefs, filt))
-        return self  # chainable
-
     def add_lp1(self, f_pass, n=1):
         """
         Append a **first-order allpass** low-pass decimation stage.

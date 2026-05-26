@@ -360,14 +360,10 @@ class ChainPanel(QWidget):
         self.sp_order.setRange(1, 32); self.sp_order.setValue(4)
         al.addRow("Order:", self.sp_order)
 
-        # ── LP / HP decimation buttons ─────────────────────────────────────
-        btn_row1 = QHBoxLayout()
+        # ── LP decimation button ───────────────────────────────────────────
         btn_lp = QPushButton("＋ LP  (÷2)")
-        btn_hp = QPushButton("＋ HP  (÷2)")
         btn_lp.clicked.connect(lambda: self._add("LP"))
-        btn_hp.clicked.connect(lambda: self._add("HP"))
-        btn_row1.addWidget(btn_lp); btn_row1.addWidget(btn_hp)
-        al.addRow(btn_row1)
+        al.addRow(btn_lp)
 
         # ── Quarter-band null ───────────────────────────────────────────
         bs_note = QLabel(
@@ -419,12 +415,12 @@ class ChainPanel(QWidget):
                 f"Stage {len(self._stages)-1}: Null@{in_fs/4:.1f}Hz  "
                 f"{in_fs:.1f} Hz  (no decimation)  order={order}"
             )
-        else:
+        else:  # LP
             out_fs = in_fs / 2
             fp_lo  = self.sp_fpass.value()
-            self._stages.append((ftype, fp_lo, None, order))
+            self._stages.append(("LP", fp_lo, None, order))
             self.lst.addItem(
-                f"Stage {len(self._stages)-1}: {ftype}  "
+                f"Stage {len(self._stages)-1}: LP  "
                 f"{in_fs:.1f}→{out_fs:.1f} Hz  f_pass={fp_lo:.1f}  order={order}"
             )
 
@@ -451,10 +447,10 @@ class ChainPanel(QWidget):
                     f"Stage {i}: Null@{in_fs/4:.1f}Hz  "
                     f"{in_fs:.1f} Hz  (no decimation)  order={order}"
                 )
-            else:
+            else:  # LP
                 out_fs = in_fs / 2; dec *= 2
                 self.lst.addItem(
-                    f"Stage {i}: {ft}  {in_fs:.1f}→{out_fs:.1f} Hz  "
+                    f"Stage {i}: LP  {in_fs:.1f}→{out_fs:.1f} Hz  "
                     f"f_pass={fp_lo:.1f}  order={order}"
                 )
 
@@ -468,8 +464,6 @@ class ChainPanel(QWidget):
             for ft, fp_lo, _fp_hi, order in self._stages:
                 if ft == "LP":
                     chain.add_lp(fp_lo, order=order)
-                elif ft == "HP":
-                    chain.add_hp(fp_lo, order=order)
                 elif ft == "BS":
                     chain.add_quarterband_bs(order=order)
             self.designed.emit(chain)
