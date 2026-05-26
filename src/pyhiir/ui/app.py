@@ -345,9 +345,8 @@ class ChainPanel(QWidget):
 
         # f_pass explanation
         fpass_note = QLabel(
-            "f_pass (polyphase): passband edge [Hz].\n"
-            "  Must be \u003c fs/4. Stopband starts at fs/2\u2212f_pass.\n"
-            "f_pass (1st-order): \u22123\u202fdB frequency [Hz]."
+            "Passband edge [Hz]. Must be < fs_stage / 4.\n"
+            "Stopband: fs_stage/2 − f_pass  (half-band symmetric)."
         )
         fpass_note.setStyleSheet("color: gray; font-size: 10px;")
         fpass_note.setWordWrap(True)
@@ -359,30 +358,27 @@ class ChainPanel(QWidget):
 
         self.sp_order = QSpinBox()
         self.sp_order.setRange(1, 32); self.sp_order.setValue(4)
-        al.addRow("Order / sections:", self.sp_order)
+        al.addRow("Order:", self.sp_order)
 
-        # ── Polyphase (half-band) row ──────────────────────────────────
-        al.addRow(QLabel("Polyphase half-band  (2nd-order IIR, efficient):"))
+        # ── LP / HP decimation buttons ─────────────────────────────────────
         btn_row1 = QHBoxLayout()
-        btn_lp = QPushButton("＋ LP")
-        btn_hp = QPushButton("＋ HP")
+        btn_lp = QPushButton("＋ LP  (÷2)")
+        btn_hp = QPushButton("＋ HP  (÷2)")
         btn_lp.clicked.connect(lambda: self._add("LP"))
         btn_hp.clicked.connect(lambda: self._add("HP"))
         btn_row1.addWidget(btn_lp); btn_row1.addWidget(btn_hp)
         al.addRow(btn_row1)
 
-        # ── BP / BS quarter-band row ───────────────────────────────────
-        note = QLabel(
-            "BP/BS = quarter-band (≈ fs/8 … fs/4).\n"
-            "Not tunable — fixed by decimation tree."
+        # ── Quarter-band null ───────────────────────────────────────────
+        bs_note = QLabel(
+            "Structural null at exactly fs/4.\n"
+            "Insert before two LP stages for clean ÷4 decimation.\n"
+            "Does not decimate."
         )
-        note.setStyleSheet("color: gray; font-size: 11px;")
-        note.setWordWrap(True)
-        al.addRow(note)
-        btn_bp = QPushButton("＋ BP  (quarter-band, auto)")
-        btn_bp.clicked.connect(lambda: self._add("BP"))
-        al.addRow(btn_bp)
-        btn_bs = QPushButton("＋ BS  (quarter-band, no decim.)")
+        bs_note.setStyleSheet("color: gray; font-size: 10px;")
+        bs_note.setWordWrap(True)
+        al.addRow(bs_note)
+        btn_bs = QPushButton("＋ Quarter-Band Null  (no decimation)")
         btn_bs.clicked.connect(lambda: self._add("BS"))
         al.addRow(btn_bs)
 
@@ -410,33 +406,18 @@ class ChainPanel(QWidget):
     def _current_fs(self):
         fs = self.sp_fs.value()
         for s in self._stages:
-            ft = s[0]
-            if ft == "BP":
-                fs /= 4
-            elif ft != "BS":   # BS does not decimate
+            if s[0] != "BS":   # BS does not decimate
                 fs /= 2
         return fs
 
     def _add(self, ftype):
         in_fs  = self._current_fs()
         order  = self.sp_order.value()
-        if ftype == "BP":
-            out_fs = in_fs / 4
-            tbw   = 0.1
-            f_lo  = round((in_fs / 2) * (0.25 - tbw / 2), 2)
-            f_hi  = round(in_fs * (0.25 - tbw / 2), 2)
-            self._stages.append((ftype, f_lo, f_hi, order))
-            self.lst.addItem(
-                f"Stage {len(self._stages)-1}: BP  "
-                f"{in_fs:.1f}→{out_fs:.1f} Hz  "
-                f"≈[{f_lo:.1f}–{f_hi:.1f} Hz]  order={order}"
-            )
-        elif ftype == "BS":
+        if ftype == "BS":
             self._stages.append((ftype, None, None, order))
             self.lst.addItem(
-                f"Stage {len(self._stages)-1}: BS  "
-                f"{in_fs:.1f} Hz (no decim.)  "
-                f"stops[{in_fs/8:.1f}–{in_fs/4:.1f} Hz]  order={order}"
+                f"Stage {len(self._stages)-1}: Null@{in_fs/4:.1f}Hz  "
+                f"{in_fs:.1f} Hz  (no decimation)  order={order}"
             )
         else:
             out_fs = in_fs / 2
@@ -463,20 +444,13 @@ class ChainPanel(QWidget):
         fs = self.sp_fs.value()
         dec = 1
         for i, entry in enumerate(self._stages):
-            ft, fp_lo, fp_hi, order = entry
+            ft, fp_lo, _fp_hi, order = entry
             in_fs = fs / dec
-            if ft == "BP":
-                out_fs = in_fs / 4; dec *= 4
+            if ft == "BS":
                 self.lst.addItem(
-                    f"Stage {i}: BP  {in_fs:.1f}→{out_fs:.1f} Hz  "
-                    f"[{fp_lo:.1f}–{fp_hi:.1f} Hz]  order={order}"
+                    f"Stage {i}: Null@{in_fs/4:.1f}Hz  "
+                    f"{in_fs:.1f} Hz  (no decimation)  order={order}"
                 )
-            elif ft == "BS":
-                self.lst.addItem(
-                    f"Stage {i}: BS  {in_fs:.1f} Hz (no decim.)  "
-                    f"stops[{in_fs/8:.1f}–{in_fs/4:.1f} Hz]  order={order}"
-                )
-                # dec unchanged
             else:
                 out_fs = in_fs / 2; dec *= 2
                 self.lst.addItem(
@@ -491,13 +465,11 @@ class ChainPanel(QWidget):
             return
         try:
             chain = DecimatorChain(fs=self.sp_fs.value())
-            for ft, fp_lo, fp_hi, order in self._stages:
+            for ft, fp_lo, _fp_hi, order in self._stages:
                 if ft == "LP":
                     chain.add_lp(fp_lo, order=order)
                 elif ft == "HP":
                     chain.add_hp(fp_lo, order=order)
-                elif ft == "BP":
-                    chain.add_quarterband_bp(order=order)
                 elif ft == "BS":
                     chain.add_quarterband_bs(order=order)
             self.designed.emit(chain)
@@ -618,35 +590,45 @@ class PlotPanel(QWidget):
             cv.draw()
 
     def plot_chain(self, chain):
-        """Plot cascade response + per-stage overlay."""
+        """Plot cascade magnitude, phase, and group delay."""
         self.cv_mag.clear(); self.cv_ph.clear(); self.cv_gd.clear()
         ax_m = self.cv_mag.axs[0]
+        ax_p = self.cv_ph.axs[0]
+        ax_g = self.cv_gd.axs[0]
 
         colors = [ACCENT, GREEN, ORANGE, PURPLE, RED]
-        common = np.linspace(0, chain.fs / 2, 8192)
-        cascade_db = np.zeros(len(common))
+        n_pts  = 8192
+        common = np.linspace(0, chain.fs / 2, n_pts)
+        cascade_db = np.zeros(n_pts)
+        cascade_ph = np.zeros(n_pts)   # accumulated unwrapped phase [rad]
+        cascade_gd = np.zeros(n_pts)   # accumulated group delay [input samples]
+
+        title = (f"DecimatorChain  {chain.fs:.0f}→{chain.output_fs:.0f} Hz  "
+                 f"\xd7{2**len(chain.stages)} decimation")
 
         for i, stage in enumerate(chain.stages):
-            col  = colors[i % len(colors)]
-            tf   = stage.get_transfer_function()
+            col   = colors[i % len(colors)]
+            tf    = stage.get_transfer_function()
             valid = common <= stage.output_fs
-            w_s  = 2 * np.pi * common[valid] / stage.input_fs
-            _, h = freqz(tf.b, tf.a, worN=w_s)
-            db   = 20 * np.log10(np.abs(h) + 1e-12)
-            cascade_db[valid] += db
+            w_s   = 2 * np.pi * common[valid] / stage.input_fs
+            _, h  = freqz(tf.b, tf.a, worN=w_s)
+            cascade_db[valid] += 20 * np.log10(np.abs(h) + 1e-12)
+            cascade_ph[valid] += np.unwrap(np.angle(h))
+            # GD in stage's own samples × 2^i converts to input samples
+            _, gd_i = sp_gd((tf.b, tf.a), w=w_s)
+            cascade_gd[valid] += gd_i * (2 ** i)
             ax_m.plot(
-                common[valid], db, "--", color=col, lw=1.2, alpha=0.7,
-                label=f"Stage {i} {stage.filter_type} {stage.input_fs:.0f}→{stage.output_fs:.0f} Hz"
+                common[valid], 20 * np.log10(np.abs(h) + 1e-12),
+                "--", color=col, lw=1.2, alpha=0.7,
+                label=f"Stage {i} {stage.filter_type} "
+                      f"{stage.input_fs:.0f}→{stage.output_fs:.0f} Hz"
             )
 
+        # ── Magnitude ──────────────────────────────────────────────────
         ax_m.plot(common, cascade_db, color=C_COMBINED, lw=2.2, label="Cascade")
         ax_m.axvline(chain.output_fs, color=ORANGE, ls=":", lw=1.2,
                      label=f"out Nyquist {chain.output_fs:.1f} Hz")
-        ax_m.set_title(
-            f"DecimatorChain  {chain.fs:.0f}→{chain.output_fs:.0f} Hz  "
-            f"×{2**len(chain.stages)} decimation",
-            color=TEXT, pad=6
-        )
+        ax_m.set_title(title, color=TEXT, pad=6)
         ax_m.set_xlabel("Frequency [Hz]", color=TEXT)
         ax_m.set_ylabel("Magnitude [dB]", color=TEXT)
         ax_m.set_ylim(-80, 5)
@@ -654,8 +636,32 @@ class PlotPanel(QWidget):
         if ax_m.get_legend_handles_labels()[1]:
             ax_m.legend(fontsize=9)
 
-        self.cv_mag.fig.tight_layout(pad=1.8)
-        self.cv_mag.draw()
+        # ── Phase ───────────────────────────────────────────────────────
+        out_mask = common <= chain.output_fs
+        f_out    = common[out_mask]
+        ph_out   = np.unwrap(cascade_ph[out_mask])
+        ax_p.plot(f_out, np.degrees(ph_out), color=C_PHASE, lw=2.0)
+        ax_p.axvline(chain.output_fs, color=ORANGE, ls=":", lw=1.2,
+                     label=f"out Nyquist {chain.output_fs:.1f} Hz")
+        ax_p.set_title(title, color=TEXT, pad=6)
+        ax_p.set_xlabel("Frequency [Hz]", color=TEXT)
+        ax_p.set_ylabel("Phase [\xb0]", color=TEXT)
+        ax_p.set_xlim(0, chain.fs / 2)
+        ax_p.legend(fontsize=9)
+
+        # ── Group delay (in input samples) ──────────────────────────────
+        ax_g.plot(f_out, cascade_gd[out_mask], color=C_GD, lw=2.0)
+        ax_g.axvline(chain.output_fs, color=ORANGE, ls=":", lw=1.2,
+                     label=f"out Nyquist {chain.output_fs:.1f} Hz")
+        ax_g.set_title(title, color=TEXT, pad=6)
+        ax_g.set_xlabel("Frequency [Hz]", color=TEXT)
+        ax_g.set_ylabel("Group delay [input samples]", color=TEXT)
+        ax_g.set_xlim(0, chain.fs / 2)
+        ax_g.legend(fontsize=9)
+
+        for cv in (self.cv_mag, self.cv_ph, self.cv_gd):
+            cv.fig.tight_layout(pad=1.8)
+            cv.draw()
 
 
 # ═══════════════════════════════════════════════════════════════════════════

@@ -243,56 +243,6 @@ class DecimatorChain:
         self.stages.append(StageSpec(len(self.stages), 'HP1', fs, f_pass, coefs, filt))
         return self
 
-    def add_bp(self, f_low, f_high,
-               order_lp=None, order_hp=None, attenuation_db=60.0):
-        """
-        Append a bandpass pair (LP at f_high, then HP at f_low).
-
-        This selects the sub-band [f_low, f_high] by cascading two half-band
-        stages that each decimate by 2 (×4 total for this pair).
-
-        Args:
-            f_low:          Lower passband edge [Hz] — handled by the HP stage.
-            f_high:         Upper passband edge [Hz] — handled by the LP stage.
-            order_lp:       Allpass order for the LP stage (None = auto).
-            order_hp:       Allpass order for the HP stage (None = auto).
-            attenuation_db: Stopband attenuation [dB] when order is None.
-
-        Example::
-
-            chain = DecimatorChain(fs=1500)
-            # quarter-band BP: passband ~[187, 375] Hz, decimation ×4
-            chain.add_bp(f_low=187, f_high=375, order_lp=4, order_hp=4)
-        """
-        self.add_lp(f_high, order=order_lp, attenuation_db=attenuation_db)
-        self.add_hp(f_low,  order=order_hp, attenuation_db=attenuation_db)
-        return self
-
-    def add_quarterband_bp(self, order=None, attenuation_db=60.0, tbw=0.1):
-        """
-        Append an automatic quarter-band bandpass pair.
-
-        The polyphase IIR structure can only split at half-Nyquist, so a
-        two-stage LP→HP cascade *always* selects the quarter-band
-        sub-band  ≈ [fs/8, fs/4]  of the input sample rate.
-
-        The center frequency and width are **not tunable** without modulation.
-        The ``tbw`` parameter controls the transition sharpness; it sets:
-            f_pass_lp = fs_in  × (0.25 − tbw/2)
-            f_pass_hp = fs_in/2 × (0.25 − tbw/2)
-
-        Args:
-            order:          Allpass order for both stages (None = auto from attenuation_db).
-            attenuation_db: Stopband attenuation [dB] (used when order is None).
-            tbw:            Normalised transition bandwidth per stage (default 0.1).
-        """
-        fs_in  = self._current_input_fs()
-        f_lp   = fs_in       * (0.25 - tbw / 2)   # LP cut just below fs/4
-        f_hp   = (fs_in / 2) * (0.25 - tbw / 2)   # HP cut just above fs/8
-        self.add_lp(f_lp, order=order, attenuation_db=attenuation_db)
-        self.add_hp(f_hp, order=order, attenuation_db=attenuation_db)
-        return self
-
     def add_quarterband_bs(self, order=None, attenuation_db=60.0):
         """
         Append a quarter-band band-stop stage (non-decimating).
